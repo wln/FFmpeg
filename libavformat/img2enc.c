@@ -42,6 +42,7 @@ typedef struct VideoMuxData {
     char target[4][1024];
     int update;
     int use_strftime;
+    int use_subsecond;
     int frame_pts;
     const char *muxer;
     int use_rename;
@@ -139,13 +140,19 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
     if (img->update) {
         av_strlcpy(filename, img->path, sizeof(filename));
     } else if (img->use_strftime) {
-        time_t now0;
+        timeval now0;
         struct tm *tm, tmpbuf;
-        time(&now0);
-        tm = localtime_r(&now0, &tmpbuf);
-        if (!strftime(filename, sizeof(filename), img->path, tm)) {
+        gettimeofday(&now0, NULL)
+        tm = localtime_r(&now0.tv_sec, &tmpbuf);
+        if (!strftime(filename, sizeof(filename) - strlen(USE_SUBSECOND_SEPARATOR) - USE_SUBSECOND_LENGTH, img->path, tm)) {
             av_log(s, AV_LOG_ERROR, "Could not get frame filename with strftime\n");
             return AVERROR(EINVAL);
+        }
+        if (img->use_subsecond) {
+            char subsec[USE_SUBSECOND_LENGTH + 1];
+            subsec = snprintf(&subsec, USE_SUBSECOND_LENGTH + 1, "%06d", now0.tv_usec);
+            strncat(filename, &USE_SUBSECOND_SEPARATOR, sizeof(filename) - strlen(filename) - 1)
+            strncat(filename, &subsec, sizeof(filename) - strlen(filename) - 1);
         }
     } else if (img->frame_pts) {
         if (av_get_frame_filename2(filename, sizeof(filename), img->path, pkt->pts, AV_FRAME_FILENAME_FLAGS_MULTIPLE) < 0) {
@@ -243,6 +250,7 @@ static const AVOption muxoptions[] = {
     { "update",       "continuously overwrite one file", OFFSET(update),  AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0,       1, ENC },
     { "start_number", "set first number in the sequence", OFFSET(img_number), AV_OPT_TYPE_INT,  { .i64 = 1 }, 0, INT_MAX, ENC },
     { "strftime",     "use strftime for filename", OFFSET(use_strftime),  AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, ENC },
+    { "subsecond_time", "append a subsecond fraction to strftime output", OFFSET(use_subsecond), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, ENC },
     { "frame_pts",    "use current frame pts for filename", OFFSET(frame_pts),  AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, ENC },
     { "atomic_writing", "write files atomically (using temporary files and renames)", OFFSET(use_rename), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, ENC },
     { "protocol_opts", "specify protocol options for the opened files", OFFSET(protocol_opts), AV_OPT_TYPE_DICT, {0}, 0, 0, ENC },

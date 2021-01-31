@@ -30,6 +30,9 @@
 #include <glob.h>
 #endif
 
+#define USE_SUBSECOND_SEPARATOR "."
+#define USE_SUBSECOND_LENGTH 6
+
 enum PatternType {
     PT_GLOB_SEQUENCE,
     PT_GLOB,
