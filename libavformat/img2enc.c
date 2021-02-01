@@ -32,6 +32,7 @@
 #include "avio_internal.h"
 #include "internal.h"
 #include "img2.h"
+#include <sys/time.h>
 
 typedef struct VideoMuxData {
     const AVClass *class;  /**< Class for private options. */
@@ -142,7 +143,7 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
     } else if (img->use_strftime) {
         timeval now0;
         struct tm *tm, tmpbuf;
-        gettimeofday(&now0, NULL)
+        gettimeofday(&now0, NULL);
         tm = localtime_r(&now0.tv_sec, &tmpbuf);
         if (!strftime(filename, sizeof(filename) - strlen(USE_SUBSECOND_SEPARATOR) - USE_SUBSECOND_LENGTH, img->path, tm)) {
             av_log(s, AV_LOG_ERROR, "Could not get frame filename with strftime\n");
@@ -150,9 +151,9 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
         }
         if (img->use_subsecond) {
             char subsec[USE_SUBSECOND_LENGTH + 1];
-            subsec = snprintf(&subsec, USE_SUBSECOND_LENGTH + 1, "%06d", now0.tv_usec);
-            strncat(filename, &USE_SUBSECOND_SEPARATOR, sizeof(filename) - strlen(filename) - 1)
-            strncat(filename, &subsec, sizeof(filename) - strlen(filename) - 1);
+            subsec = snprintf(subsec, USE_SUBSECOND_LENGTH + 1, "%06d", now0.tv_usec);
+            strncat(filename, USE_SUBSECOND_SEPARATOR, sizeof(filename) - strlen(filename) - 1)
+            strncat(filename, subsec, sizeof(filename) - strlen(filename) - 1);
         }
     } else if (img->frame_pts) {
         if (av_get_frame_filename2(filename, sizeof(filename), img->path, pkt->pts, AV_FRAME_FILENAME_FLAGS_MULTIPLE) < 0) {
