@@ -151,7 +151,7 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
         }
         if (img->use_subsecond) {
             char subsec[USE_SUBSECOND_LENGTH + 1];
-            subsec = snprintf(subsec, USE_SUBSECOND_LENGTH + 1, "%06d", now0.tv_usec);
+            snprintf(subsec, USE_SUBSECOND_LENGTH + 1, "%06ld", now0.tv_usec);
             strncat(filename, USE_SUBSECOND_SEPARATOR, sizeof(filename) - strlen(filename) - 1);
             strncat(filename, subsec, sizeof(filename) - strlen(filename) - 1);
         }
