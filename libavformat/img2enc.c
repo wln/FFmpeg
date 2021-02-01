@@ -141,10 +141,10 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
     if (img->update) {
         av_strlcpy(filename, img->path, sizeof(filename));
     } else if (img->use_strftime) {
-        timeval now0;
+        struct timeval now0;
         struct tm *tm, tmpbuf;
         gettimeofday(&now0, NULL);
-        tm = localtime_r(&now0.tv_sec, &tmpbuf);
+        tm = localtime_r(&(now0.tv_sec), &tmpbuf);
         if (!strftime(filename, sizeof(filename) - strlen(USE_SUBSECOND_SEPARATOR) - USE_SUBSECOND_LENGTH, img->path, tm)) {
             av_log(s, AV_LOG_ERROR, "Could not get frame filename with strftime\n");
             return AVERROR(EINVAL);
